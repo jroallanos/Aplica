@@ -1,5 +1,5 @@
 ---
-title: "MyLabJournal"
+title: "Aplica IN4402"
 output: html_document
 ---
 

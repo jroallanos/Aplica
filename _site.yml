@@ -1,8 +1,8 @@
-name: "Aplica"
+name: "IN4402"
 navbar:
-  title: "Aplica"
+  title: "IN4402"
   left:
-    - text: "Home"
+    - text: "Aplica"
       href: index.html
     - text: "2SLS"
       href: 2SLS.html

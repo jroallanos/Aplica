@@ -321,7 +321,7 @@ div.tocify {
   <a href="index.html">Home</a>
 </li>
 <li>
-  <a href="Journal.html">Journal</a>
+  <a href="2SLS.html">2SLS</a>
 </li>
 <li>
   <a href="Links.html">Links</a>
@@ -397,14 +397,14 @@ while (significativo == 0) {                      #Se repite el loop hasta que s
   }
 }</code></pre>
 <p>Al realizar este ejercicio, se grafican los 400 valores del estimador <span class="math inline">\(\beta_Za\)</span>, tal y como se muestra a continuación:</p>
-<p><img src="Journal_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<p><img src="2SLS_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
 </div>
 </div>
 <div id="análisis-conjunto" class="section level1">
 <h1><strong>Análisis conjunto</strong></h1>
 <p>Utilizar un instrumento artificial no funciona, pues aunque cada iteración en que se escoge aquella variable <span class="math inline">\(Za_i\)</span> que sí es relevante (porque está correlacionada con <span class="math inline">\(X_i\)</span>), no es posible asegurar que este NO esté correlacionado con el error no observado (<span class="math inline">\(u_i\)</span>). Lo anterior se debe a que la exogeneidad del instrumento (<span class="math inline">\(Cov(Za_i, u_i) = 0\)</span>) es imposible de construir ni de observar. Por lo tanto, para cada caso en que <span class="math inline">\(Za_i\)</span> es relevante, NO puede asegurarse que sea al mismo tiempo exógena en la misma medida. Van a ocurrir casos en que sí, van a ocurrir casos en que no, es por eso que el estimador sigue estando sesgado, y además, es poco eficiente.</p>
 <p>Esto se puede ver en el gráfico que junta las tres distribuciones para los escenarios simulados: OLS, VI, VI-artificial. Analice los gráficos y responda a las preguntas.</p>
-<p><img src="Journal_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p><img src="2SLS_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
 </div>
 
 

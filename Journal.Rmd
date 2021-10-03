@@ -1,5 +1,5 @@
 ---
-title: "Journal"
+title: "Estimación por Método de Variables Instrumentales - 2SLS"
 output:
   html_document:
     toc: true
@@ -9,120 +9,114 @@ output:
     toc_depth: 1
     #code_folding: hide
 ---
+<style type="text/css">
+.main-container {
+  max-width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+body {
+  text-align: justify;
+}
+</style>
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(message=FALSE,warning=FALSE, cache=TRUE)
+library(mvtnorm)
+library(AER)
+library(ggplot2)
+library(ERSA)
+library(ggthemes)
+library(dplyr)
+library(kableExtra)
+library(readr)
+library(summarytools)
+library(stargazer)
+library(shiny)
+library(doBy)
+library(shinycustomloader)
+library(sass)
+knitr::opts_chunk$set(echo = FALSE)
+set.seed(12345)
 ```
 
-IMPORTANT: You can delete everything in here and start fresh. You might want to start by not deleting anything above this line until you know what that stuff is doing.
+En este tutorial, procederemos a simular una variable instrumental para evaluar su efectividad al ser utilizada en una estimación de 2SLS. 
+
+# Endogeneidad
+Lo primero que haremos será simular un escenario de dos ecuaciones, que tendrá variables exógenas (generadas por fuera del modelo) y variables endógenas (generadas dentro del modelo). Para eso, pensemos en el siguiente par de ecuaciones (por simplicidad se omite el término constante):
+
+$$  Y_i = \beta X_i + \lambda Q_i + u_i \hspace{0.3 cm} (1)$$
 
 
-This is an .Rmd file. It is plain text with special features. Any time you write just like this, it will be compiled to normal text in the website. If you put a \# in front of your text, it will create a top level-header.
-
-# My first post
-
-2018 | 7 | 23 Last compiled: `r Sys.Date()`
-
-Notice that whatever you define as a top level header, automatically gets put into the table of contents bar on the left. 
-
-## Second level header
-
-You can add more headers by adding more hashtags. These won't be put into the table of contents
-
-### third level header
-
-Here's an even lower level header
-
-# My second post (note the order)
-
-2018 | 7 | 23 Last compiled: `r Sys.Date()`
-
-I'm writing this tutorial going from the top down. And, this is how it will be printed. So, notice the second post is second in the list. If you want your most recent post to be at the top, then make a new post starting at the top. If you want the oldest first, do, then keep adding to the bottom
-
-# Adding R stuff
-
-So far this is just a blog where you can write in plain text and serve your writing to a webpage. One of the main purposes of this lab journal is to record your progress learning R. The reason I am asking you to use this process is because you can both make a website, and a lab journal, and learn R all in R-studio. This makes everything really convenient and in the sam place. 
-
-So, let's say you are learning how to make a histogram in R. For example, maybe you want to sample 100 numbers from a normal distribution with mean = 0, and standard deviation =1, and then you want to plot a histogram. You can do this right here by using an r code block, like this:
-
-```{r}
-samples <- rnorm(100, mean=0, sd=1)
-hist(samples)
-```
-
-When you knit this R Markdown document, you will see that the histogram is printed to the page, along with the R code. This document can be set up to hide the R code in the webpage, just delete the comment (hashtag), from the cold folding option in the yaml header up top. For purposes of letting yourself see the code, and me see the code, best to keep it the way that it is. You learn all of these things and more can be customized in each R code block.
-
-# The big idea
-
-Use this lab journal to record what you do in R. This way I will be able to see what you are doing and help you along the way. You will also be creating a repository of all the things you do. You can make posts about everything. Learning specific things in R (project unrelated), and doing things for the project that we will discuss at the beginning of the Fall semester. You can get started now by fiddling around with googling things, and trying stuff out in R. I've placed some helpful starting links in the links page on this website
-
-# What can you do right now by yourself?
-
-It's hard to learn programming when you don't have specific problems that you are trying to solve. Everything just seems abstract.
-
-I wrote an [introductory programming book that introduces R](https://crumplab.github.io/programmingforpsych/), and gives some [concrete problems for you to solve](https://crumplab.github.io/programmingforpsych/programming-challenges-i-learning-the-fundamentals.html). 
-
-To get the hang of journaling and solving the problems to learn programming, my suggestion is that you use this .Rmd file to solve the problems. It would look like this:
-
-# Problem 1
-
-Do simple math with numbers, addition, subtraction, multiplication, division
-
-```{r}
-1+2
-2*5
-5/3
-(1+6+4)/5
-
-```
-
-# Problem 2
-
-Put numbers into variables, do simple math on the variables
-
-```{r}
-a<-1
-b<-2
-a+b
-
-d<-c(1,2,3)
-e<-c(5,6,7)
-d+e
-d*e
-d/e
-
-```
-
-# Problem 3
-
-Write code that will place the numbers 1 to 100 separately into a variable using for loop. Then, again using the seq function.
-
-```{r}
-# for loop solution
-# i becomes the number 1 to 100 at each step of the loop
+$$ X_i = \gamma Z_i + \delta Q_i + v_i \hspace{0.3 cm} (2) $$
 
 
-a <- length(100) # make empty variable, set length to 100
-for (i in 1:100){
-  a[i] <-i #assigns the number in i, to the ith index of a
-}
+Vemos que la variable $X_i$ se genera en la ecuación (2) y es a la vez una variable independiente en la ecuación (1). Definiremos los valores de  $\beta = 5$, y de $\lambda = \gamma = \delta =1$ para estudiar su estimación posterior.
 
-print(a)
+Podemos considerar que tanto $Q_i$ como $Z_i$ son variables exógenas, y para efecto de este ejercicio, las simularemos con una distribución normal de 300 observaciones (ese sería el tamaño de la muestra en cada escenario). 
 
-# for loop solution #2
+```` {r paso2, echo = TRUE}
+Q <- rnorm(300,0,1)
+Z <- rnorm(300,0,1)
+````
 
-a<-c() #create empty variable using combine command
-for (i in 1:100){
-  a<-c(a,i) # keeps combining a with itself and the new number in i
-}
-print(a)
+Para construir la endogeneidad en $X_i$, simularemos ambos errores no observables ($u_i$, $v_i$), en base a una misma distribución normal bivariada, con una correlación entre -1 y 1. Al presentar esta correlación entre los errores, en la ecuación (1) la variable $X_i$ (generada en base al error $v_i$) se encuentra correlacionada con el error no observable de la ecuación ($u_i$).
 
-# seq solution
-a <- seq(1,100,1) # look up help for seq using ?seq() in console
-print(a)
+Al estimar con OLS esta situación, es esperable que entregue un estimador sesgado, es decir, que su valor esperado no esté en el valor real (por construcción $\beta = 5$). Para evaluar esto, correremos 400 simulaciones del caso recién descrito, estimando cada vez $(\beta_{OLS})$. Observa que ocurre en el gráfico. 
 
-```
 
-# Replace this with problem 4
+# **Variables Instrumentales** 
 
-And keep going. Try to solve the problems with different scripts that provide the same solution. Good luck, Happy coding.
+## La eficiencia limpiando el sesgo.
+
+Siguiendo con la simulación de la sección anterior, ya notamos que existe un sesgo en el estimador de OLS, que depende en gran medida de la magnitud de la correlación entre el regresor endógeno ($X_i$) y el error no observable.
+
+$$ X_i = \gamma Z_i + \delta Q_i + v_i \hspace{0.3 cm} (2) $$
+
+$$  Y_i = \beta X_i + \lambda Q_i + u_i \hspace{0.3 cm} (1)$$
+
+Ahora probaremos utilizando la variable $Z_i$ como instrumento de la variable $X_i$. En nuestra simulación, $Z$ fue contruida de forma completamente exógena. Además, fue parte de la definición de $X_i$, por lo que cumple también con ser un instrumento relevante. 
+
+La función que utilizaremos para realizar 2SLS será:
+
+```` {r paso5, echo = TRUE}
+# reg_vi <- ivreg(Y ~ X + Q | Z + Q)
+````
+
+Esta vez, nos concentraremos en la varianza de nuestro estimador. La simulación genera 400 iteraciones de una mismo escenario. Veremos cómo el tamaño de los datos de cada escenario afectan a la precisión del estimador. Al mirar el gráfico se puede ver que, aunque la varianza cambie, el promedio o valor medio siempre está en torno al valor 5, que es, el valor definido del parámetro $\beta = 5$.
+
+
+
+
+
+# **Variable Instrumental Artificial** 
+
+## Creación de una variable instrumental
+
+Ahora, para cada una de las 400 iteraciones, simularemos variables $Za_i$ hasta encontrar una que esté correlacionada con la variable endógena $X_i$, a través del siguiente código. Una vez se escoge $Za_i$ que satisface la condición, se estima la regresión y se guarda el coeficiente.
+
+```` {r paso8, echo = TRUE}
+#    significativo <- 0
+#    while (significativo == 0) {                         #Se repite el loop hasta que sea siginifcativo
+#      Za <- rnorm(300,0,1)                               #Esta función genera un vector normal de 300 datos
+#      reg3 <-lm(X~Za)                                    #Esta función realiza una regresión lineal
+#      b <-summary(reg3)$coefficients[2,1]                #Aquí y la siguiente línea se guardan coeficientes
+#      se <-summary(reg3)$coefficients[2,2]             
+#      if(abs(b)/se > 1.96){                              #Esta es la condición de significancia al 95%
+#        reg4<-ivreg(Y~X+Q|Za+Q)                          #Si es significativo, se estima VI con esa variable
+#        B_IVa[i]=summary(reg4)$coefficients[2,1]         #Se guarda el valor estimado para ver la distribución
+#        sig <- 1                                         #Se corta el loop para esta iteración
+#      }
+#    }
+````
+
+Al realizar este ejercicio, se grafican los 400 valores del estimador $\beta_Za$, tal y como se muestra a continuación:
+
+
+
+
+# **Análisis conjunto**
+
+Utilizar un instrumento artificial no funciona, pues aunque cada iteración en que se escoge aquella variable $Za_i$ que sí es relevante (porque está correlacionada con $X_i$), no es posible asegurar que este NO esté correlacionado con el error no observado ($u_i$). Lo anterior se debe a que la exogeneidad del instrumento ($Cov(Za_i, u_i) = 0$) es imposible de construir ni de observar. Por lo tanto, para cada caso en que $Za_i$ es relevante, NO puede asegurarse que sea al mismo tiempo exógena en la misma medida. Van a ocurrir casos en que sí, van a ocurrir casos en que no, es por eso que el estimador sigue estando sesgado, y además, es poco eficiente.
+
+Esto se puede ver en el gráfico que junta las tres distribuciones para los escenarios simulados: OLS, VI, VI-artificial. Analice los gráficos y responda a las preguntas.
+

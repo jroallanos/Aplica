@@ -32,6 +32,14 @@ This is a template example for lab journaling. Students in Matt Crump's Human Co
 4. Change everything to make it your own.
 
 
+## TO DO (en el corto mediano plazo)
+
+1. Crear un Github del curso, y colgar el sitio ahí (algo así como aplica.github.io/...)
+
+2. Colgar tutoriales en Shiny
+
+
+
 </div>
 <div class="col-sm-6">
 
